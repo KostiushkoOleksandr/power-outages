@@ -1,21 +1,20 @@
 import { useEffect, useState } from "react";
 import { fetchOutages } from "../api/outages";
 import type { OutagesResponse } from "../types/outtages";
+import type { Region } from "../data/regions";
 
-const CACHE_KEY = "outagesCache";
-
-function readCache(): OutagesResponse | null {
+function readCache(key: string): OutagesResponse | null {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
+    const raw = localStorage.getItem(key);
     return raw ? (JSON.parse(raw) as OutagesResponse) : null;
   } catch {
     return null;
   }
 }
 
-function writeCache(data: OutagesResponse): void {
+function writeCache(key: string, data: OutagesResponse): void {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+    localStorage.setItem(key, JSON.stringify(data));
   } catch {
     // сховище недоступне або переповнене, це не критично
   }
@@ -28,8 +27,9 @@ interface UseOutagesResult {
   fromCache: boolean;
 }
 
-export function useOutages(): UseOutagesResult {
-  const [initial] = useState(readCache);
+export function useOutages(region: Region): UseOutagesResult {
+  const cacheKey = `outagesCache:${region.id}`;
+  const [initial] = useState(() => readCache(cacheKey));
   const [data, setData] = useState<OutagesResponse | null>(initial);
   const [loading, setLoading] = useState(initial === null);
   const [error, setError] = useState<string | null>(null);
@@ -38,13 +38,13 @@ export function useOutages(): UseOutagesResult {
   useEffect(() => {
     let cancelled = false;
 
-    fetchOutages()
+    fetchOutages(region.file)
       .then((result) => {
         if (cancelled) return;
         setData(result);
         setFromCache(false);
         setError(null);
-        writeCache(result);
+        writeCache(cacheKey, result);
       })
       .catch((err: Error) => {
         if (!cancelled) setError(err.message);
@@ -56,7 +56,7 @@ export function useOutages(): UseOutagesResult {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [region.file, cacheKey]);
 
   return { data, loading, error, fromCache };
 }
