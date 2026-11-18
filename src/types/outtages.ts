@@ -15,3 +15,8 @@ export interface OutagesResponse {
     today: number;
   };
 }
+
+export interface Interval {
+  start: number; // хвилини від 00:00
+  end: number;
+}
