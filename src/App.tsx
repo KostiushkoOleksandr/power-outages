@@ -12,7 +12,7 @@ import { GroupSelect } from "./components/GroupSelect";
 const STORAGE_KEY = "selectedGroup";
 
 function App() {
-  const { data, loading, error } = useOutages();
+  const { data, loading, error, fromCache } = useOutages();
   const now = useNow();
   const [selectedGroup, setSelectedGroup] = useState<string | null>(() => {
     try {
@@ -31,9 +31,8 @@ function App() {
     }
   }
 
-  if (loading) return <p>Завантаження...</p>;
-  if (error) return <p>Помилка: {error}</p>;
-  if (!data) return <p>Даних немає</p>;
+  if (loading && !data) return <p>Завантаження...</p>;
+  if (!data) return <p>Помилка: {error ?? "даних немає"}</p>;
 
   const day = Object.values(data.fact.data)[0];
   if (!day) return <p>На сьогодні даних ще немає</p>;
@@ -46,9 +45,20 @@ function App() {
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const status = getPowerStatus(intervals, nowMinutes);
 
+  const updated = new Date(data.lastUpdated);
+  const isOldDay = updated.toDateString() !== now.toDateString();
+
   return (
     <div>
       <h1>Графік відключень</h1>
+
+      {fromCache && error && (
+        <p>
+          ⚠️ Немає звʼязку з джерелом. Показано збережені дані.
+          {isOldDay && " Вони можуть бути застарілими: оновлення було не сьогодні."}
+        </p>
+      )}
+
       <GroupSelect groups={groups} value={group} onChange={handleGroupChange} />
 
       <p>
@@ -78,7 +88,7 @@ function App() {
         </ul>
       )}
 
-      <p>Оновлено: {new Date(data.lastUpdated).toLocaleString("uk-UA")}</p>
+      <p>Оновлено: {updated.toLocaleString("uk-UA")}</p>
     </div>
   );
 }
