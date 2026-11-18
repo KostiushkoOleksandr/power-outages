@@ -6,8 +6,8 @@ interface GroupSelectProps {
 
 export function GroupSelect({ groups, value, onChange }: GroupSelectProps) {
   return (
-    <label>
-      Група:{" "}
+    <label className="card group-select">
+      Група
       <select value={value} onChange={(e) => onChange(e.target.value)}>
         {groups.map((g) => (
           <option key={g} value={g}>

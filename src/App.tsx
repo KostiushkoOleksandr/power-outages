@@ -31,11 +31,17 @@ function App() {
     }
   }
 
-  if (loading && !data) return <p>Завантаження...</p>;
-  if (!data) return <p>Помилка: {error ?? "даних немає"}</p>;
+  if (loading && !data) {
+    return <p className="message">Завантаження...</p>;
+  }
+  if (!data) {
+    return <p className="message">Помилка: {error ?? "даних немає"}</p>;
+  }
 
   const day = Object.values(data.fact.data)[0];
-  if (!day) return <p>На сьогодні даних ще немає</p>;
+  if (!day) {
+    return <p className="message">На сьогодні даних ще немає</p>;
+  }
 
   const groups = Object.keys(day);
   const group =
@@ -48,48 +54,63 @@ function App() {
   const updated = new Date(data.lastUpdated);
   const isOldDay = updated.toDateString() !== now.toDateString();
 
+  let mainText: string;
+  let subText: string;
+  if (status.isOff) {
+    mainText = "Світла немає";
+    subText = `Увімкнуть о ${formatMinutes(status.until)} (через ${formatDuration(status.until - nowMinutes)})`;
+  } else if (status.next !== null) {
+    mainText = "Світло є";
+    subText = `Наступне відключення о ${formatMinutes(status.next)} (через ${formatDuration(status.next - nowMinutes)})`;
+  } else {
+    mainText = "Світло є";
+    subText = "Більше відключень сьогодні не заплановано";
+  }
+
   return (
-    <div>
-      <h1>Графік відключень</h1>
+    <main className="app">
+      <h1 className="title">Графік відключень</h1>
 
       {fromCache && error && (
-        <p>
+        <div className="warning">
           ⚠️ Немає звʼязку з джерелом. Показано збережені дані.
           {isOldDay && " Вони можуть бути застарілими: оновлення було не сьогодні."}
-        </p>
+        </div>
       )}
 
       <GroupSelect groups={groups} value={group} onChange={handleGroupChange} />
 
-      <p>
-        {status.isOff
-          ? `Світла немає. Увімкнуть о ${formatMinutes(status.until)} (через ${formatDuration(status.until - nowMinutes)})`
-          : status.next !== null
-            ? `Світло є. Наступне відключення о ${formatMinutes(status.next)} (через ${formatDuration(status.next - nowMinutes)})`
-            : "Світло є. Більше відключень сьогодні не заплановано"}
-      </p>
+      <section className={`status ${status.isOff ? "status--off" : "status--on"}`}>
+        <p className="status__main">{mainText}</p>
+        <p className="status__sub">{subText}</p>
+      </section>
 
-      {intervals.length === 0 ? (
-        <p>Сьогодні відключень не заплановано</p>
-      ) : (
-        <ul>
-          {intervals.map((i) => {
-            const isCurrent = nowMinutes >= i.start && nowMinutes < i.end;
-            return (
-              <li
-                key={i.start}
-                style={{ fontWeight: isCurrent ? "bold" : "normal" }}
-              >
-                {formatMinutes(i.start)}–{formatMinutes(i.end)}
-                {isCurrent && " ← зараз"}
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      <section className="card">
+        <h2 className="section-title">Відключення сьогодні</h2>
+        {intervals.length === 0 ? (
+          <p>Сьогодні відключень не заплановано</p>
+        ) : (
+          <ul className="intervals">
+            {intervals.map((i) => {
+              const isCurrent = nowMinutes >= i.start && nowMinutes < i.end;
+              return (
+                <li
+                  key={i.start}
+                  className={`interval ${isCurrent ? "interval--current" : ""}`}
+                >
+                  <span>
+                    {formatMinutes(i.start)}–{formatMinutes(i.end)}
+                  </span>
+                  {isCurrent && <span className="badge">зараз</span>}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
 
-      <p>Оновлено: {updated.toLocaleString("uk-UA")}</p>
-    </div>
+      <p className="updated">Оновлено: {updated.toLocaleString("uk-UA")}</p>
+    </main>
   );
 }
 
