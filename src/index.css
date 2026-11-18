@@ -11,11 +11,12 @@
   --warn-bg: #fef3c7;
   --warn-text: #92400e;
   --accent: #2563eb;
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
+/* автоматична темна тема, якщо користувач не обрав тему вручну */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0f1115;
     --card: #1a1d23;
     --text: #e8eaed;
@@ -28,7 +29,25 @@
     --warn-bg: #3a2e10;
     --warn-text: #fbbf24;
     --accent: #60a5fa;
+    color-scheme: dark;
   }
+}
+
+/* темна тема, обрана вручну */
+:root[data-theme="dark"] {
+  --bg: #0f1115;
+  --card: #1a1d23;
+  --text: #e8eaed;
+  --muted: #9aa0a6;
+  --border: #2a2e35;
+  --on: #4ade80;
+  --on-bg: #14301f;
+  --off: #f87171;
+  --off-bg: #3a1618;
+  --warn-bg: #3a2e10;
+  --warn-text: #fbbf24;
+  --accent: #60a5fa;
+  color-scheme: dark;
 }
 
 * {
@@ -49,9 +68,46 @@ body {
   padding: 16px;
 }
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 8px 0 16px;
+}
+
 .title {
   font-size: 1.4rem;
-  margin: 8px 0 16px;
+  margin: 0;
+}
+
+.region-name {
+  margin: 4px 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.theme-toggle {
+  display: flex;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  overflow: hidden;
+}
+
+.theme-toggle button {
+  border: none;
+  background: transparent;
+  padding: 8px 10px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.theme-toggle button[aria-pressed="true"] {
+  background: var(--accent);
 }
 
 .card {
@@ -71,15 +127,16 @@ body {
   font-size: 0.9rem;
 }
 
-.group-select {
+.select-row {
   display: flex;
   align-items: center;
   gap: 12px;
   font-weight: 600;
 }
 
-.group-select select {
+.select-row select {
   flex: 1;
+  min-width: 0;
   padding: 10px 12px;
   font-size: 1rem;
   border-radius: 10px;

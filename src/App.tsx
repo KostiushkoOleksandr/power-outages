@@ -1,115 +1,55 @@
-import { useState } from "react";
-import { useOutages } from "./hooks/useOutages";
-import { useNow } from "./hooks/useNow";
-import {
-  toOutageIntervals,
-  getPowerStatus,
-  formatMinutes,
-  formatDuration,
-} from "./utils/schedule";
-import { GroupSelect } from "./components/GroupSelect";
+import { useEffect, useState } from "react";
+import { OutagesView } from "./components/OutagesView";
+import { SelectField } from "./components/SelectField";
+import { ThemeToggle } from "./components/ThemeToggle";
+import { REGIONS, findRegion, regionTitle } from "./data/regions";
 
-const STORAGE_KEY = "selectedGroup";
+const REGION_KEY = "selectedRegion";
 
 function App() {
-  const { data, loading, error, fromCache } = useOutages();
-  const now = useNow();
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(() => {
+  const [regionId, setRegionId] = useState<string>(() => {
     try {
-      return localStorage.getItem(STORAGE_KEY);
+      return findRegion(localStorage.getItem(REGION_KEY)).id;
     } catch {
-      return null;
+      return findRegion(null).id;
     }
   });
 
-  function handleGroupChange(group: string) {
-    setSelectedGroup(group);
+  const region = findRegion(regionId);
+
+  useEffect(() => {
+    document.title = `Графік відключень: ${regionTitle(region)}`;
+  }, [region]);
+
+  function handleRegionChange(id: string) {
+    setRegionId(id);
     try {
-      localStorage.setItem(STORAGE_KEY, group);
+      localStorage.setItem(REGION_KEY, id);
     } catch {
-      // сховище може бути недоступне, це не критично
+      // сховище недоступне, це не критично
     }
-  }
-
-  if (loading && !data) {
-    return <p className="message">Завантаження...</p>;
-  }
-  if (!data) {
-    return <p className="message">Помилка: {error ?? "даних немає"}</p>;
-  }
-
-  const day = Object.values(data.fact.data)[0];
-  if (!day) {
-    return <p className="message">На сьогодні даних ще немає</p>;
-  }
-
-  const groups = Object.keys(day);
-  const group =
-    selectedGroup && groups.includes(selectedGroup) ? selectedGroup : groups[0];
-
-  const intervals = toOutageIntervals(day[group]);
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  const status = getPowerStatus(intervals, nowMinutes);
-
-  const updated = new Date(data.lastUpdated);
-  const isOldDay = updated.toDateString() !== now.toDateString();
-
-  let mainText: string;
-  let subText: string;
-  if (status.isOff) {
-    mainText = "Світла немає";
-    subText = `Увімкнуть о ${formatMinutes(status.until)} (через ${formatDuration(status.until - nowMinutes)})`;
-  } else if (status.next !== null) {
-    mainText = "Світло є";
-    subText = `Наступне відключення о ${formatMinutes(status.next)} (через ${formatDuration(status.next - nowMinutes)})`;
-  } else {
-    mainText = "Світло є";
-    subText = "Більше відключень сьогодні не заплановано";
   }
 
   return (
     <main className="app">
-      <h1 className="title">Графік відключень</h1>
-
-      {fromCache && error && (
-        <div className="warning">
-          ⚠️ Немає звʼязку з джерелом. Показано збережені дані.
-          {isOldDay && " Вони можуть бути застарілими: оновлення було не сьогодні."}
+      <header className="header">
+        <div>
+          <h1 className="title">Графік відключень</h1>
+          <p className="region-name">{regionTitle(region)}</p>
         </div>
-      )}
+        <ThemeToggle />
+      </header>
 
-      <GroupSelect groups={groups} value={group} onChange={handleGroupChange} />
+      <SelectField
+        label="Область"
+        value={region.id}
+        options={REGIONS.map((r) => ({ value: r.id, label: regionTitle(r) }))}
+        onChange={handleRegionChange}
+      />
 
-      <section className={`status ${status.isOff ? "status--off" : "status--on"}`}>
-        <p className="status__main">{mainText}</p>
-        <p className="status__sub">{subText}</p>
-      </section>
-
-      <section className="card">
-        <h2 className="section-title">Відключення сьогодні</h2>
-        {intervals.length === 0 ? (
-          <p>Сьогодні відключень не заплановано</p>
-        ) : (
-          <ul className="intervals">
-            {intervals.map((i) => {
-              const isCurrent = nowMinutes >= i.start && nowMinutes < i.end;
-              return (
-                <li
-                  key={i.start}
-                  className={`interval ${isCurrent ? "interval--current" : ""}`}
-                >
-                  <span>
-                    {formatMinutes(i.start)}–{formatMinutes(i.end)}
-                  </span>
-                  {isCurrent && <span className="badge">зараз</span>}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
-
-      <p className="updated">Оновлено: {updated.toLocaleString("uk-UA")}</p>
+      {/* key змушує React створити компонент заново при зміні області,
+          тому стан і кеш не змішуються між областями */}
+      <OutagesView key={region.id} region={region} />
     </main>
   );
 }
