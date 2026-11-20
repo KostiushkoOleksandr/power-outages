@@ -3,6 +3,8 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  // сайт лежить не в корені домену, а в підпапці з назвою репозиторію
+  base: "/power-outages/",
   plugins: [
     react(),
     VitePWA({
