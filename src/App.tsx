@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { OutagesView } from "./components/OutagesView";
 import { SelectField } from "./components/SelectField";
 import { ThemeToggle } from "./components/ThemeToggle";
+import { InstallButton } from "./components/InstallButton";
 import { REGIONS, findRegion, regionTitle } from "./data/regions";
 
 const REGION_KEY = "selectedRegion";
@@ -39,6 +40,8 @@ function App() {
         </div>
         <ThemeToggle />
       </header>
+
+      <InstallButton />
 
       <SelectField
         label="Область"
