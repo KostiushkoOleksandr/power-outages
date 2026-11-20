@@ -152,8 +152,12 @@ export function OutagesView({ region }: OutagesViewProps) {
           </ul>
         )}
       </section>
-
-      <p className="updated">Оновлено: {updated.toLocaleString("uk-UA")}</p>
+        <p className="updated">Оновлено: {updated.toLocaleString("uk-UA")}</p>
+        <p className="disclaimer">
+        Дані беруться з відкритого неофіційного джерела і можуть містити
+        неточності. Свою чергу та актуальний графік перевіряйте на сайті
+        вашого обленерго.
+      </p>
     </>
   );
 }
