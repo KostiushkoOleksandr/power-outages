@@ -10,6 +10,7 @@ import {
 } from "../utils/schedule";
 import { groupLabel, sortGroups } from "../utils/groups";
 import { SelectField } from "./SelectField";
+import { EmergencyNotice } from "./EmergencyNotice";
 import type { Region } from "../data/regions";
 
 interface OutagesViewProps {
@@ -119,10 +120,13 @@ export function OutagesView({ region }: OutagesViewProps) {
         <section
           className={`status ${status.isOff ? "status--off" : "status--on"}`}
         >
+          <p className="status__label">За графіком</p>
           <p className="status__main">{main}</p>
           <p className="status__sub">{sub}</p>
         </section>
       )}
+
+      <EmergencyNotice />
 
       <section className="card">
         <h2 className="section-title">
@@ -152,8 +156,9 @@ export function OutagesView({ region }: OutagesViewProps) {
           </ul>
         )}
       </section>
-        <p className="updated">Оновлено: {updated.toLocaleString("uk-UA")}</p>
-        <p className="disclaimer">
+
+      <p className="updated">Оновлено: {updated.toLocaleString("uk-UA")}</p>
+      <p className="disclaimer">
         Дані беруться з відкритого неофіційного джерела і можуть містити
         неточності. Свою чергу та актуальний графік перевіряйте на сайті
         вашого обленерго.
